@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Pro Path — Interactive Course</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D0F14;--surface:#161921;--card:#1E2230;--border:#2A2F3E;
+  --accent:#4EFFC3;--accent2:#7B6EF6;--warn:#FF8C42;
+  --text:#E8EAF0;--muted:#7A8099;--white:#FFFFFF;
+  --font-d:'Space Grotesk',sans-serif;--font-b:'Inter',sans-serif;--font-m:'JetBrains Mono',monospace;
+  --sidebar:260px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:15px;line-height:1.65;display:flex;min-height:100vh;overflow-x:hidden}
+
+/* SIDEBAR */
+#sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--border);
+  height:100vh;position:sticky;top:0;overflow-y:auto;
+  display:flex;flex-direction:column;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.sb-logo{padding:1.1rem 1.2rem;border-bottom:1px solid var(--border);font-family:var(--font-d);font-weight:700;font-size:0.95rem;color:var(--accent);letter-spacing:-0.02em;display:flex;align-items:center;gap:0.5rem}
+.sb-progress-wrap{padding:0.8rem 1.2rem;border-bottom:1px solid var(--border)}
+.sb-progress-label{font-size:0.72rem;color:var(--muted);margin-bottom:0.4rem;display:flex;justify-content:space-between}
+.sb-progress-bar{height:3px;background:var(--border);border-radius:999px;overflow:hidden}
+.sb-progress-fill{height:100%;background:var(--accent);border-radius:999px;transition:width .4s}
+.sb-modules{flex:1;padding:0.6rem 0}
+.sb-mod-group{margin-bottom:0.2rem}
+.sb-mod-btn{
+  width:100%;text-align:left;background:none;border:none;cursor:pointer;
+  padding:0.6rem 1.2rem;display:flex;align-items:center;gap:0.7rem;
+  color:var(--muted);font-size:0.82rem;font-family:var(--font-b);
+  transition:color .15s,background .15s;
+}
+.sb-mod-btn:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+.sb-mod-btn.active{color:var(--white);background:rgba(78,255,195,0.07)}
+.sb-mod-btn.active .sb-dot{background:var(--accent)}
+.sb-mod-btn.completed .sb-dot{background:var(--accent);opacity:0.5}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .2s}
+.sb-mod-num{font-family:var(--font-m);font-size:0.68rem;color:inherit;min-width:22px}
+.sb-lesson-list{padding-left:2.8rem;overflow:hidden}
+.sb-lesson-item{
+  display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;
+  font-size:0.78rem;color:var(--muted);cursor:pointer;transition:color .15s;
+  border:none;background:none;width:100%;text-align:left;
+}
+.sb-lesson-item:hover{color:var(--text)}
+.sb-lesson-item.active{color:var(--accent)}
+.sb-lesson-item.done .lesson-check{color:var(--accent)}
+.lesson-check{font-size:0.7rem;min-width:14px}
+.sb-footer{padding:1rem 1.2rem;border-top:1px solid var(--border);font-size:0.72rem;color:var(--muted)}
+.xp-badge{display:inline-flex;align-items:center;gap:0.3rem;background:rgba(123,110,246,0.15);color:var(--accent2);border-radius:4px;padding:0.2rem 0.6rem;font-family:var(--font-m);font-size:0.7rem}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow:hidden}
+.top-bar{
+  height:52px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;background:rgba(13,15,20,0.9);
+  backdrop-filter:blur(8px);position:sticky;top:0;z-index:10;
+}
+.top-bar-breadcrumb{font-size:0.82rem;color:var(--muted)}
+.top-bar-breadcrumb span{color:var(--text)}
+.top-bar-actions{display:flex;align-items:center;gap:1rem}
+.btn-nav{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  padding:0.35rem 0.9rem;color:var(--muted);font-size:0.8rem;cursor:pointer;
+  font-family:var(--font-b);transition:all .15s;
+}
+.btn-nav:hover{border-color:var(--accent);color:var(--accent)}
+.btn-nav.primary{background:var(--accent);color:#0D0F14;border-color:var(--accent);font-weight:600}
+.btn-nav.primary:hover{opacity:0.9}
+
+/* CONTENT AREA */
+#content{flex:1;overflow-y:auto;padding:2.5rem 2.5rem 4rem;max-width:780px}
+
+/* LESSON VIEWS */
+.lesson-view{display:none}
+.lesson-view.active{display:block}
+
+.lesson-hero{margin-bottom:2rem}
+.lesson-type-tag{
+  display:inline-flex;align-items:center;gap:0.4rem;
+  font-family:var(--font-m);font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;
+  padding:0.25rem 0.7rem;border-radius:4px;margin-bottom:1rem;
+}
+.tag-video{background:rgba(78,255,195,0.1);color:var(--accent)}
+.tag-lab{background:rgba(255,140,66,0.1);color:var(--warn)}
+.tag-quiz{background:rgba(123,110,246,0.12);color:var(--accent2)}
+.tag-read{background:rgba(122,128,153,0.12);color:var(--muted)}
+
+.lesson-title{font-family:var(--font-d);font-size:1.7rem;font-weight:700;color:var(--white);line-height:1.15;letter-spacing:-0.025em;margin-bottom:0.7rem}
+.lesson-meta{font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:1rem}
+.lesson-meta span{display:flex;align-items:center;gap:0.3rem}
+
+/* VIDEO PLAYER */
+.video-placeholder{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1rem;margin:1.5rem 0;cursor:pointer;transition:border-color .2s;position:relative;overflow:hidden;
+}
+.video-placeholder:hover{border-color:var(--accent)}
+.play-btn{
+  width:64px;height:64px;background:var(--accent);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .15s;
+}
+.play-btn:hover{transform:scale(1.08)}
+.play-icon{width:0;height:0;border-style:solid;border-width:12px 0 12px 22px;border-color:transparent transparent transparent #0D0F14;margin-left:4px}
+.video-caption{font-size:0.82rem;color:var(--muted)}
+.video-played{border-color:rgba(78,255,195,0.3)!important}
+
+/* LESSON BODY */
+.lesson-body{line-height:1.75;color:var(--text)}
+.lesson-body h2{font-family:var(--font-d);font-size:1.15rem;font-weight:600;color:var(--white);margin:1.8rem 0 0.7rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border)}
+.lesson-body h3{font-family:var(--font-d);font-size:1rem;font-weight:600;color:var(--white);margin:1.4rem 0 0.5rem}
+.lesson-body p{margin-bottom:1rem;color:var(--text);font-size:0.9rem}
+.lesson-body ul,.lesson-body ol{margin:0.5rem 0 1rem 1.2rem}
+.lesson-body li{margin-bottom:0.4rem;font-size:0.9rem}
+.lesson-body strong{color:var(--white)}
+.callout{
+  background:rgba(78,255,195,0.06);border-left:3px solid var(--accent);
+  border-radius:0 8px 8px 0;padding:1rem 1.2rem;margin:1.2rem 0;
+}
+.callout.warn{background:rgba(255,140,66,0.06);border-color:var(--warn)}
+.callout.info{background:rgba(123,110,246,0.08);border-color:var(--accent2)}
+.callout-label{font-family:var(--font-m);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem}
+.callout .callout-label{color:var(--accent)}
+.callout.warn .callout-label{color:var(--warn)}
+.callout.info .callout-label{color:var(--accent2)}
+.callout p{margin:0;font-size:0.88rem}
+
+/* COMPARISON TABLE */
+.comp-table{width:100%;border-collapse:collapse;margin:1rem 0 1.5rem;font-size:0.85rem}
+.comp-table th{text-align:left;padding:0.7rem 1rem;font-family:var(--font-m);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);border-bottom:1px solid var(--border)}
+.comp-table td{padding:0.65rem 1rem;border-bottom:1px solid rgba(42,47,62,0.5);color:var(--text);font-size:0.88rem}
+.comp-table tr:last-child td{border-bottom:none}
+.comp-table .good{color:var(--accent)}
+.comp-table .bad{color:#ff6b6b}
+
+/* LAB */
+.lab-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0}
+.lab-header{display:flex;align-items:center;gap:0.7rem;margin-bottom:1rem}
+.lab-icon{font-size:1.4rem}
+.lab-header h3{font-family:var(--font-d);font-size:1rem;color:var(--white)}
+.lab-step{
+  display:flex;gap:0.9rem;padding:0.8rem 0;
+  border-bottom:1px solid rgba(42,47,62,0.5);align-items:flex-start;
+}
+.lab-step:last-child{border-bottom:none}
+.step-num{
+  width:24px;height:24px;background:rgba(78,255,195,0.1);border:1px solid rgba(78,255,195,0.25);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-m);font-size:0.68rem;color:var(--accent);flex-shrink:0;margin-top:2px;
+}
+.step-content strong{color:var(--white);font-size:0.9rem;display:block}
+.step-content p{color:var(--muted);font-size:0.82rem;margin-top:0.2rem}
+.lab-textarea{
+  width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:0.8rem;color:var(--text);font-family:var(--font-b);font-size:0.88rem;
+  resize:vertical;min-height:90px;margin-top:0.6rem;outline:none;
+  transition:border-color .2s;
+}
+.lab-textarea:focus{border-color:var(--accent)}
+.lab-textarea::placeholder{color:var(--muted)}
+.submit-lab{
+  background:var(--accent);color:#0D0F14;border:none;border-radius:6px;
+  padding:0.55rem 1.4rem;font-family:var(--font-d);font-weight:700;font-size:0.85rem;
+  cursor:pointer;margin-top:0.8rem;transition:opacity .15s;
+}
+.submit-lab:hover{opacity:0.88}
+.lab-feedback{
+  display:none;margin-top:0.8rem;padding:0.8rem 1rem;
+  background:rgba(78,255,195,0.08);border-radius:8px;
+  color:var(--accent);font-size:0.85rem;
+}
+.lab-feedback.shown{display:block}
+
+/* QUIZ */
+.quiz-container{margin:1rem 0}
+.quiz-q{margin-bottom:2rem}
+.quiz-q .q-text{font-size:0.95rem;font-weight:500;color:var(--white);margin-bottom:0.9rem}
+.quiz-options{display:flex;flex-direction:column;gap:0.5rem}
+.quiz-opt{
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:0.75rem 1rem;cursor:pointer;font-size:0.88rem;color:var(--text);
+  transition:border-color .2s,background .2s;text-align:left;width:100%;
+}
+.quiz-opt:hover:not(.locked){border-color:var(--accent2);background:rgba(123,110,246,0.05)}
+.quiz-opt.selected{border-color:var(--accent2);background:rgba(123,110,246,0.08);color:var(--white)}
+.quiz-opt.correct{border-color:var(--accent);background:rgba(78,255,195,0.08);color:var(--accent)}
+.quiz-opt.wrong{border-color:#ff6b6b;background:rgba(255,107,107,0.08);color:#ff6b6b}
+.quiz-opt.locked{cursor:default}
+.quiz-explanation{display:none;margin-top:0.6rem;padding:0.7rem 1rem;background:rgba(78,255,195,0.06);border-radius:6px;font-size:0.82rem;color:var(--muted)}
+.quiz-explanation.shown{display:block}
+.quiz-result{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:1.5rem;text-align:center;display:none;margin-top:1rem;
+}
+.quiz-result.shown{display:block}
+.result-score{font-family:var(--font-d);font-size:2.5rem;font-weight:700;color:var(--accent)}
+.result-label{color:var(--muted);font-size:0.9rem;margin-top:0.3rem}
+.btn-submit-quiz{
+  background:var(--accent2);color:#fff;border:none;border-radius:6px;
+  padding:0.6rem 1.8rem;font-family:var(--font-d);font-weight:700;font-size:0.88rem;
+  cursor:pointer;margin-top:1.2rem;transition:opacity .15s;
+}
+.btn-submit-quiz:hover{opacity:0.88}
+.btn-submit-quiz:disabled{opacity:0.4;cursor:default}
+
+/* COMPLETE BUTTON */
+.complete-btn-wrap{margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.btn-complete{
+  background:var(--accent);color:#0D0F14;border:none;border-radius:8px;
+  padding:0.7rem 1.8rem;font-family:var(--font-d);font-weight:700;font-size:0.9rem;
+  cursor:pointer;transition:opacity .15s;display:flex;align-items:center;gap:0.5rem;
+}
+.btn-complete:hover{opacity:0.88}
+.btn-complete:disabled{opacity:0.5;cursor:default}
+.btn-complete.done{background:var(--border);color:var(--muted);cursor:default}
+.xp-gain{font-family:var(--font-m);font-size:0.78rem;color:var(--accent2)}
+
+/* DASHBOARD */
+#dashboard{display:block}
+.dash-hero{margin-bottom:2.5rem}
+.dash-hero h1{font-family:var(--font-d);font-size:2rem;font-weight:700;color:var(--white);letter-spacing:-0.03em;margin-bottom:0.5rem}
+.dash-hero p{color:var(--muted);font-size:0.92rem;max-width:500px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:2rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
+.stat-card .val{font-family:var(--font-d);font-size:1.6rem;font-weight:700;color:var(--white)}
+.stat-card .val span{color:var(--accent);font-size:1rem}
+.stat-card .lbl{font-size:0.75rem;color:var(--muted);margin-top:0.2rem}
+.module-cards{display:flex;flex-direction:column;gap:0.7rem}
+.mod-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:1rem 1.2rem;cursor:pointer;transition:border-color .2s;
+  display:flex;align-items:center;gap:1.2rem;
+}
+.mod-card:hover{border-color:var(--accent2)}
+.mod-card-num{font-family:var(--font-m);font-size:0.7rem;color:var(--muted);min-width:24px}
+.mod-card-info{flex:1}
+.mod-card-info h3{font-family:var(--font-d);font-size:0.92rem;color:var(--white);margin-bottom:0.2rem}
+.mod-card-info p{font-size:0.78rem;color:var(--muted)}
+.mod-card-status{font-size:0.75rem;font-family:var(--font-m);padding:0.2rem 0.6rem;border-radius:4px}
+.status-locked{color:var(--muted);background:rgba(122,128,153,0.1)}
+.status-active{color:var(--accent);background:rgba(78,255,195,0.1)}
+.status-done{color:#0D0F14;background:var(--accent)}
+
+/* MOBILE */
+.menu-toggle{display:none;background:none;border:none;color:var(--text);font-size:1.2rem;cursor:pointer;padding:0.3rem}
+@media(max-width:768px){
+  :root{--sidebar:240px}
+  #sidebar{position:fixed;left:-260px;z-index:200;transition:left .25s;height:100vh}
+  #sidebar.open{left:0}
+  .menu-toggle{display:flex}
+  #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199}
+  #overlay.shown{display:block}
+  #content{padding:1.5rem 1.2rem 4rem}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sb-logo">⚡ AI Pro Path</div>
+  <div class="sb-progress-wrap">
+    <div class="sb-progress-label"><span>Your progress</span><span id="progress-pct">0%</span></div>
+    <div class="sb-progress-bar"><div class="sb-progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+  <nav class="sb-modules" id="sb-nav"></nav>
+  <div class="sb-footer">
+    <div class="xp-badge">⚡ <span id="xp-count">0</span> XP earned</div>
+  </div>
+</aside>
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<main id="main">
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:0.8rem">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="top-bar-breadcrumb" id="breadcrumb">Dashboard</div>
+    </div>
+    <div class="top-bar-actions">
+      <button class="btn-nav" onclick="navigate('prev')" id="btn-prev" style="display:none">← Prev</button>
+      <button class="btn-nav primary" onclick="navigate('next')" id="btn-next" style="display:none">Next →</button>
+    </div>
+  </div>
+
+  <div id="content">
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+      <div class="dash-hero">
+        <h1>Welcome to AI Pro Path 👋</h1>
+        <p>Your complete 8-week course to become an AI Trainer & Annotator. No coding needed — just curiosity and commitment.</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="val" id="d-completed">0</div><div class="lbl">Lessons Done</div></div>
+        <div class="stat-card"><div class="val"><span id="d-xp">0</span></div><div class="lbl">XP Earned</div></div>
+        <div class="stat-card"><div class="val" id="d-streak">0</div><div class="lbl">Day Streak</div></div>
+        <div class="stat-card"><div class="val" id="d-pct">0<span>%</span></div><div class="lbl">Complete</div></div>
+      </div>
+      <div class="module-cards" id="module-cards"></div>
+    </div>
+
+    <!-- LESSON VIEWS injected here -->
+  </div>
+</main>
+
+<script>
+const COURSE = [
+  {
+    id:'m1', title:'What is AI? — Understanding the Basics',
+    week:'Week 1', duration:'~4 hrs', xp:150,
+    lessons:[
+      {
+        id:'m1l1', type:'video', title:'What is Artificial Intelligence?',
+        duration:'18 min',
+        content:`
+          <h2>What is Artificial Intelligence?</h2>
+          <p>Artificial Intelligence — or AI — is software that can perform tasks that normally require human intelligence. This includes things like understanding language, recognizing images, making decisions, and learning from experience.</p>
+          <div class="callout"><div class="callout-label">Key Idea</div><p>AI is not magic. It is math and statistics applied to massive amounts of data. Computers find patterns in data and use those patterns to make predictions.</p></div>
+          <h3>Three ways to think about AI</h3>
+          <ul>
+            <li><strong>Narrow AI</strong> — Designed for one specific task. Examples: spam filters, face recognition, recommendation algorithms. This is what exists today.</li>
+            <li><strong>General AI</strong> — A system that could do any intellectual task a human can. This does not exist yet.</li>
+            <li><strong>Superintelligence</strong> — Theoretical AI that would surpass human intelligence in every way. Far future speculation.</li>
+          </ul>
+          <h3>AI in your daily life</h3>
+          <p>You already interact with AI dozens of times a day without realizing it. Every time Netflix recommends a show, Google autocompletes your search, or your phone unlocks with your face — that is AI at work.</p>
+          <table class="comp-table">
+            <tr><th>Application</th><th>AI Task</th></tr>
+            <tr><td>Netflix / Spotify</td><td class="good">Recommendation</td></tr>
+            <tr><td>Gmail spam filter</td><td class="good">Text classification</td></tr>
+            <tr><td>Face ID on your phone</td><td class="good">Image recognition</td></tr>
+            <tr><td>ChatGPT / Claude</td><td class="good">Language generation</td></tr>
+            <tr><td>Google Maps ETA</td><td class="good">Prediction</td></tr>
+          </table>
+          <h3>Why does this matter for you?</h3>
+          <p>As an AI Trainer or Data Annotator, you are the human expert who teaches these systems. You will decide what is a good answer, what is a bad answer, what is safe content and what is harmful. Understanding what AI actually is makes you much better at this job.</p>
+          <div class="callout info"><div class="callout-label">Your Role</div><p>AI does not learn on its own. It learns from human-labeled examples. You are that human. Your judgments directly shape how AI models behave for millions of users.</p></div>
+        `
+      },
+      {
+        id:'m1l2', type:'video', title:'Machine Learning vs Deep Learning vs AI',
+        duration:'22 min',
+        content:`
+          <h2>Machine Learning vs Deep Learning vs AI</h2>
+          <p>These three terms are often confused or used interchangeably. They are actually nested concepts — like Russian dolls.</p>
+          <div class="callout"><div class="callout-label">Simple Model</div><p>AI is the big idea. Machine Learning is one approach to building AI. Deep Learning is a specific technique within Machine Learning.</p></div>
+          <h3>Artificial Intelligence (AI)</h3>
+          <p>The broadest category. Any technique that allows computers to mimic human intelligence. This includes rule-based systems written by humans ("if X then Y"), as well as systems that learn from data.</p>
+          <h3>Machine Learning (ML)</h3>
+          <p>A subset of AI where the computer learns from examples rather than being given explicit rules. Instead of programming every rule, you give the system thousands of examples and it figures out the patterns itself.</p>
+          <ul>
+            <li>You show it 10,000 photos labeled "cat" and 10,000 labeled "dog"</li>
+            <li>The model learns the visual patterns that distinguish cats from dogs</li>
+            <li>It can now classify new photos it has never seen</li>
+          </ul>
+          <h3>Deep Learning (DL)</h3>
+          <p>A specific type of machine learning that uses <strong>neural networks</strong> — systems loosely inspired by the human brain. Deep learning powers most modern AI breakthroughs: image recognition, language models (like ChatGPT), voice assistants, and self-driving cars.</p>
+          <div class="callout info"><div class="callout-label">Why it Matters for Annotators</div><p>Deep learning models require enormous amounts of carefully labeled data. A self-driving car model may need millions of annotated images. That is the work of data annotators — people like you will be doing.</p></div>
+          <h3>Quick reference</h3>
+          <table class="comp-table">
+            <tr><th>Term</th><th>What it means</th><th>Example</th></tr>
+            <tr><td>AI</td><td>Computer mimics human thinking</td><td>Spam filter</td></tr>
+            <tr><td>Machine Learning</td><td>Learns from examples</td><td>Netflix recommendations</td></tr>
+            <tr><td>Deep Learning</td><td>Uses neural networks</td><td>ChatGPT, face recognition</td></tr>
+          </table>
+        `
+      },
+      {
+        id:'m1l3', type:'video', title:'How AI Models are Built & Trained',
+        duration:'25 min',
+        content:`
+          <h2>How AI Models are Built & Trained</h2>
+          <p>Understanding this pipeline is essential. Every step of it is a place where humans are needed — and many of those humans are AI Trainers and Data Annotators.</p>
+          <h3>The 5-step AI training pipeline</h3>
+          <div class="lab-card" style="margin:0 0 1.2rem">
+            <div class="lab-step"><div class="step-num">1</div><div class="step-content"><strong>Collect raw data</strong><p>Images, text, audio, video — scraped from the internet or sourced from datasets. This data is messy and unstructured.</p></div></div>
+            <div class="lab-step"><div class="step-num">2</div><div class="step-content"><strong>Clean & annotate the data</strong><p>Humans label the data. "This image contains a cat." "This text expresses negative sentiment." This is the data annotator's core job.</p></div></div>
+            <div class="lab-step"><div class="step-num">3</div><div class="step-content"><strong>Train the model</strong><p>The labeled data is fed into a machine learning algorithm. The model adjusts itself millions of times to get better at predicting the labels.</p></div></div>
+            <div class="lab-step"><div class="step-num">4</div><div class="step-content"><strong>Evaluate & test</strong><p>The model is tested on new data it has never seen. Humans review outputs and identify errors.</p></div></div>
+            <div class="lab-step"><div class="step-num">5</div><div class="step-content"><strong>Fine-tune with human feedback</strong><p>This is RLHF — Reinforcement Learning from Human Feedback. AI Trainers rate responses and provide corrections. The model learns from this feedback.</p></div></div>
+          </div>
+          <div class="callout"><div class="callout-label">Your place in this pipeline</div><p>You will work at steps 2, 4, and 5 — the annotation, evaluation, and human feedback stages. These are the stages that require human judgment, which machines still cannot replicate.</p></div>
+          <h3>Why human judgment is irreplaceable</h3>
+          <p>Computers can process data at incredible speed, but they have no understanding of context, culture, humor, sarcasm, or nuance. They cannot tell when something is offensive in one context but acceptable in another. They cannot decide if an AI answer is actually helpful for a real person. That is what you provide.</p>
+        `
+      },
+      {
+        id:'m1l4', type:'lab', title:'Lab: Explore 5 Real AI Tools',
+        duration:'45 min',
+        content:`<h2>Lab: Explore 5 Real AI Tools</h2><p>The best way to understand AI is to use it. In this lab you will explore 5 different AI tools and record your observations. This trains your eye for what good AI output looks like — a critical skill for AI Trainers.</p>`,
+        lab:{
+          steps:[
+            {title:'Try ChatGPT or Claude',desc:'Go to chat.openai.com or claude.ai. Ask it: "Explain photosynthesis like I am 10 years old." Then ask the same question in a different way and note how the answer changes.'},
+            {title:'Try Midjourney or DALL-E',desc:'Visit midjourney.com or labs.openai.com/e. Type a descriptive prompt like "a futuristic city at sunset, photorealistic." Observe what the AI generates.'},
+            {title:'Try Hugging Face',desc:'Go to huggingface.co/spaces and find a text sentiment analysis demo. Paste 3 different sentences and observe how the model classifies them.'},
+            {title:'Try Whisper (speech-to-text)',desc:'Find a Whisper demo online (huggingface.co has one). Record yourself speaking for 30 seconds and see how accurately it transcribes.'},
+            {title:'Write your observations',desc:'After exploring all 5 tools, write 2–3 sentences about what surprised you and what you think AI does well vs poorly.'}
+          ],
+          prompt:'What surprised you most about these AI tools? What did they do well, and what did they struggle with?'
+        }
+      },
+      {
+        id:'m1l5', type:'quiz', title:'Quiz: AI Fundamentals Check',
+        duration:'15 min',
+        quiz:[
+          {q:'What is the relationship between AI, Machine Learning, and Deep Learning?',opts:['They are three completely different technologies','Machine Learning and Deep Learning are both subsets of AI','AI is a subset of Machine Learning','Deep Learning came before Machine Learning'],ans:1,exp:'AI is the broadest category. Machine Learning is one approach to building AI systems. Deep Learning is a specific technique within Machine Learning that uses neural networks.'},
+          {q:'Which step in the AI training pipeline is the data annotator\'s core job?',opts:['Training the model using algorithms','Collecting raw data from the internet','Cleaning and labeling the data','Deploying the model to production'],ans:2,exp:'Data annotators work primarily in the annotation step — labeling raw data so that machine learning models can learn from it.'},
+          {q:'What is RLHF?',opts:['A type of programming language for AI','Reinforcement Learning from Human Feedback','A data annotation software tool','A method for collecting training data'],ans:1,exp:'RLHF stands for Reinforcement Learning from Human Feedback. It is the process where human trainers rate AI outputs so the model learns to produce better responses.'},
+          {q:'Why is human judgment still needed in AI development?',opts:['Because computers are too slow','Because AI cannot yet understand context, nuance, and cultural meaning','Because AI tools are too expensive','Because governments require human oversight'],ans:1,exp:'Computers excel at pattern matching and speed but lack understanding of context, sarcasm, cultural nuance, and what actually helps a real person. Human judgment fills that gap.'},
+          {q:'Which of these is an example of Narrow AI?',opts:['A robot that can do any human job','A spam filter that classifies emails','A system that can think like a human','General artificial superintelligence'],ans:1,exp:'Narrow AI is designed for one specific task. A spam filter is a classic example — it only does one thing: classify emails as spam or not spam.'}
+        ]
+      }
+    ]
+  },
+  {
+    id:'m2', title:'How AI Learns — Data & Training Explained',
+    week:'Week 1–2', duration:'~4.5 hrs', xp:150,
+    lessons:[
+      {
+        id:'m2l1', type:'video', title:'What is Training Data?',
+        duration:'20 min',
+        content:`
+          <h2>What is Training Data?</h2>
+          <p>Training data is the fuel that powers every AI model. Without data — and without quality data — there is no intelligence. This lesson explains what training data is, where it comes from, and why its quality is everything.</p>
+          <h3>Definition</h3>
+          <p>Training data is any collection of examples used to teach a machine learning model. These examples must be labeled or structured so the model knows what it is learning from.</p>
+          <div class="callout"><div class="callout-label">Garbage In, Garbage Out</div><p>The quality of a model is directly limited by the quality of its training data. An AI trained on biased, noisy, or incorrectly labeled data will produce biased, unreliable outputs. This is why data quality and careful annotation matter enormously.</p></div>
+          <h3>Types of training data</h3>
+          <table class="comp-table">
+            <tr><th>Data Type</th><th>Examples</th><th>Used For</th></tr>
+            <tr><td>Text</td><td>Emails, articles, conversations</td><td>Language models, chatbots</td></tr>
+            <tr><td>Images</td><td>Photos, medical scans, satellite images</td><td>Computer vision, medical AI</td></tr>
+            <tr><td>Audio</td><td>Voice recordings, music</td><td>Speech recognition, music AI</td></tr>
+            <tr><td>Video</td><td>Security footage, dashcam recordings</td><td>Autonomous vehicles</td></tr>
+            <tr><td>Tabular</td><td>Spreadsheets, databases</td><td>Predictions, recommendations</td></tr>
+          </table>
+          <h3>Where does training data come from?</h3>
+          <ul>
+            <li><strong>Web scraping</strong> — Automatically collecting text and images from websites</li>
+            <li><strong>Purchased datasets</strong> — Commercially licensed data collections</li>
+            <li><strong>Human-generated</strong> — People are hired to create examples specifically for training</li>
+            <li><strong>User-generated</strong> — Apps collect data from users (with permission)</li>
+          </ul>
+          <div class="callout warn"><div class="callout-label">Privacy Note</div><p>Data collection is a sensitive issue. Legitimate AI companies always obtain proper permissions for the data they use. As an annotator, you should only work with data provided through legitimate, legal channels.</p></div>
+        `
+      },
+      {
+        id:'m2l2', type:'video', title:'Supervised vs Unsupervised Learning',
+        duration:'18 min',
+        content:`
+          <h2>Supervised vs Unsupervised Learning</h2>
+          <p>There are several different ways a machine learning model can learn. The most important distinction for you as an annotator is between <strong>supervised</strong> and <strong>unsupervised</strong> learning — because supervised learning is where annotators do most of their work.</p>
+          <h3>Supervised Learning</h3>
+          <p>The model learns from labeled examples. Every input has a correct output that a human has provided.</p>
+          <div class="callout"><div class="callout-label">Example</div><p>You show the model 50,000 images. Each image is labeled by a human: "cat," "dog," or "neither." The model learns to predict the correct label for new images. Your labels are the teacher.</p></div>
+          <ul>
+            <li>Requires human-labeled data</li>
+            <li>Most common type in industry today</li>
+            <li>Powers most practical AI applications</li>
+            <li>Annotators are essential to this process</li>
+          </ul>
+          <h3>Unsupervised Learning</h3>
+          <p>The model finds patterns in data without any labels. It groups similar things together without being told what "similar" means.</p>
+          <ul>
+            <li>No labeled data needed</li>
+            <li>Used for clustering, pattern discovery</li>
+            <li>Example: grouping customers by behavior</li>
+            <li>Annotators are less directly involved</li>
+          </ul>
+          <h3>Reinforcement Learning</h3>
+          <p>The model learns by trial and error. It takes actions, receives rewards or penalties, and improves over time. This is how AlphaGo learned to play chess better than any human. RLHF — which you will learn about next — is a form of reinforcement learning where <em>humans</em> provide the reward signal.</p>
+          <table class="comp-table">
+            <tr><th>Type</th><th>Needs labels?</th><th>Annotator role</th></tr>
+            <tr><td>Supervised</td><td class="good">Yes</td><td class="good">Critical</td></tr>
+            <tr><td>Unsupervised</td><td class="bad">No</td><td>Minimal</td></tr>
+            <tr><td>Reinforcement</td><td>Feedback signals</td><td class="good">High (RLHF)</td></tr>
+          </table>
+        `
+      },
+      {
+        id:'m2l3', type:'video', title:'What is RLHF?',
+        duration:'28 min',
+        content:`
+          <h2>What is RLHF? (Reinforcement Learning from Human Feedback)</h2>
+          <p>RLHF is the process that transformed AI language models from decent to extraordinary. It is also the core process that AI Trainers are hired to do. Understanding it deeply will make you exceptionally good at this job.</p>
+          <h3>The problem RLHF solves</h3>
+          <p>Early language models were trained only to predict the next word in a sequence. They could generate text — but that text was often unhelpful, misleading, or harmful. The model had no concept of what a <em>good</em> answer actually looks like.</p>
+          <div class="callout warn"><div class="callout-label">The Core Problem</div><p>A model optimized to predict text will generate confident-sounding nonsense if that is what appears in its training data. It has no way to know the difference between a helpful answer and a harmful one. RLHF is how we teach it that difference.</p></div>
+          <h3>How RLHF works — step by step</h3>
+          <div class="lab-card" style="margin:0 0 1.2rem">
+            <div class="lab-step"><div class="step-num">1</div><div class="step-content"><strong>Generate responses</strong><p>The AI model generates multiple different responses to the same prompt.</p></div></div>
+            <div class="lab-step"><div class="step-num">2</div><div class="step-content"><strong>Human rates the responses</strong><p>A human trainer (you) reads all the responses and ranks them from best to worst, or rates each one on criteria like helpfulness, accuracy, and safety.</p></div></div>
+            <div class="lab-step"><div class="step-num">3</div><div class="step-content"><strong>Reward model is trained</strong><p>A separate model is trained to predict human ratings — essentially learning what humans consider good vs bad.</p></div></div>
+            <div class="lab-step"><div class="step-num">4</div><div class="step-content"><strong>Language model is fine-tuned</strong><p>The original model is fine-tuned to produce outputs that score highly according to the reward model. It learns to sound more like a helpful, accurate, safe assistant.</p></div></div>
+            <div class="lab-step"><div class="step-num">5</div><div class="step-content"><strong>Iterate</strong><p>This loop repeats hundreds of times. Each iteration, the model gets closer to what humans actually want.</p></div></div>
+          </div>
+          <h3>Why your ratings matter</h3>
+          <p>Every rating you submit directly influences how the model behaves. If you rate a confident-but-wrong answer highly, the model learns to be confidently wrong more often. If you catch subtle bias in a response and rate it lower, the model learns to avoid that bias.</p>
+          <div class="callout"><div class="callout-label">Your Impact</div><p>The quality of your judgments shapes the quality of the AI model. Millions of users will interact with a model you helped train. Thoughtful, careful evaluation is not just a job — it is genuine responsibility.</p></div>
+        `
+      },
+      {
+        id:'m2l4', type:'lab', title:'Lab: Rate 10 AI Responses',
+        duration:'45 min',
+        content:`<h2>Lab: Rate 10 AI Responses</h2><p>This is your first simulation of real AI Trainer work. You will read an AI response and rate it. Real RLHF raters use criteria like helpfulness, accuracy, and safety. This lab builds that skill.</p>`,
+        lab:{
+          steps:[
+            {title:'Read the response below carefully',desc:'Prompt: "What should I do if I am feeling very stressed?" AI Response: "You should probably just calm down. Stress is not a big deal. Try not to think about it. If you really cannot handle it, maybe drink some chamomile tea or something. Lots of people feel this way."'},
+            {title:'Rate on Helpfulness (1–5)',desc:'1 = Not helpful at all. 5 = Extremely helpful. Is this response genuinely useful to someone who is stressed?'},
+            {title:'Rate on Accuracy (1–5)',desc:'Is the advice medically/factually sound? Does it reflect what experts would recommend?'},
+            {title:'Rate on Tone (1–5)',desc:'Is the tone appropriate? Does it show empathy? Would it make the person feel heard?'},
+            {title:'Write a better response',desc:'How would you rewrite this response to score higher on all three criteria?'}
+          ],
+          prompt:'Give this response a score out of 15 total (helpfulness + accuracy + tone, each out of 5) and explain your rating. What are its main weaknesses?'
+        }
+      },
+      {
+        id:'m2l5', type:'quiz', title:'Quiz: Training Data & RLHF',
+        duration:'15 min',
+        quiz:[
+          {q:'Why is data quality described as "garbage in, garbage out"?',opts:['Because storage costs are high','Because the model\'s output quality directly reflects its training data quality','Because garbage data takes longer to process','Because low quality data uses more computing power'],ans:1,exp:'The quality of an AI model is directly limited by its training data. Biased, incorrect, or low-quality labels produce unreliable models.'},
+          {q:'In supervised learning, what role does the human annotator play?',opts:['They write the code for the model','They collect raw data from the internet','They provide labeled examples that teach the model','They deploy the model to production'],ans:2,exp:'In supervised learning, annotators provide the labels — the correct answers — that the model learns to predict. Without labeled data, supervised learning cannot work.'},
+          {q:'What does the "reward model" do in the RLHF process?',opts:['It gives money to human trainers','It learns to predict what human raters consider good or bad','It generates AI responses for humans to rate','It automatically annotates images'],ans:1,exp:'The reward model is trained on human ratings. It learns to predict how humans would rate any given response, and is then used to guide the language model toward better outputs.'},
+          {q:'Which type of learning requires the most human annotation work?',opts:['Unsupervised learning','Reinforcement learning with no feedback','Supervised learning','Generative learning'],ans:0,exp:'Supervised learning requires human-labeled examples for every training sample, making it the most annotation-intensive approach.'},
+          {q:'When rating AI responses for RLHF, what are the three most common evaluation criteria?',opts:['Speed, length, and creativity','Cost, accuracy, and novelty','Helpfulness, accuracy, and safety','Grammar, spelling, and punctuation'],ans:2,exp:'The three main RLHF evaluation criteria are helpfulness (does it solve the user\'s problem), accuracy (is it factually correct), and safety (is it free of harmful content).'}
+        ]
+      }
+    ]
+  },
+  {
+    id:'m3', title:'Prompt Engineering — Talking to AI Like a Pro',
+    week:'Week 2–3', duration:'~5 hrs', xp:175,
+    lessons:[
+      {
+        id:'m3l1', type:'video', title:'What is a Prompt?',
+        duration:'15 min',
+        content:`
+          <h2>What is a Prompt?</h2>
+          <p>A prompt is any input you give to an AI language model. It can be a question, an instruction, a piece of text to analyze, a scenario to respond to, or any combination of these.</p>
+          <h3>Anatomy of a great prompt</h3>
+          <div class="lab-card" style="margin:1rem 0">
+            <div class="lab-step"><div class="step-num">1</div><div class="step-content"><strong>Role / Context</strong><p>Tell the AI who it is or what situation it is in. "You are a helpful nutritionist." or "I am writing a blog post about climate change."</p></div></div>
+            <div class="lab-step"><div class="step-num">2</div><div class="step-content"><strong>Task</strong><p>State exactly what you want done. Be specific. "Write a 3-paragraph summary" is better than "write about this."</p></div></div>
+            <div class="lab-step"><div class="step-num">3</div><div class="step-content"><strong>Format</strong><p>Specify the output format if it matters. "Return a numbered list" or "respond in bullet points under 50 words."</p></div></div>
+            <div class="lab-step"><div class="step-num">4</div><div class="step-content"><strong>Constraints</strong><p>Set any limits. "Do not include medical advice." or "Use language suitable for a 10-year-old."</p></div></div>
+          </div>
+          <div class="callout"><div class="callout-label">Compare These Prompts</div><p><strong>Bad:</strong> "Tell me about exercise."<br><br><strong>Good:</strong> "You are a fitness coach. Explain 3 beginner-friendly exercises someone can do at home with no equipment. Use simple language and include how many reps to do for each."</p></div>
+          <p>The second prompt gives the model a role, a specific task, a format (3 exercises), a constraint (no equipment), and a style guideline (simple language). The result will be far more useful.</p>
+        `
+      },
+      {
+        id:'m3l2', type:'video', title:'Zero-shot, Few-shot & Chain-of-Thought Prompting',
+        duration:'24 min',
+        content:`
+          <h2>Zero-shot, Few-shot & Chain-of-Thought Prompting</h2>
+          <p>These are three of the most powerful prompting techniques. Mastering them will make you significantly better at both writing prompts and evaluating whether AI responses are using them correctly.</p>
+          <h3>Zero-shot Prompting</h3>
+          <p>You give the AI a task with no examples. You just describe what you want and trust the model to figure it out.</p>
+          <div class="callout"><div class="callout-label">Example</div><p>"Classify the following sentence as positive, negative, or neutral: 'The food was okay but the service was terrible.'"</p></div>
+          <p>Zero-shot works well for simple, well-defined tasks where the AI has seen many similar examples in its training data.</p>
+          <h3>Few-shot Prompting</h3>
+          <p>You include 2–5 examples of the task before asking the model to do the actual thing. The examples show the model exactly what format and quality you want.</p>
+          <div class="callout info"><div class="callout-label">Example</div><p>"Classify the sentiment of these sentences:<br>Sentence: 'I love this product!' → Positive<br>Sentence: 'This is the worst experience.' → Negative<br>Sentence: 'It was delivered on time.' → Neutral<br><br>Now classify: 'The app crashed three times today.'"</p></div>
+          <p>Few-shot dramatically improves performance on specialized tasks because the examples show the model exactly what you mean by "correct."</p>
+          <h3>Chain-of-Thought (CoT) Prompting</h3>
+          <p>You ask the model to "think step by step" before giving its final answer. This dramatically improves performance on complex reasoning tasks.</p>
+          <div class="callout warn"><div class="callout-label">Example</div><p>"A store sells apples for $0.50 each and oranges for $0.75 each. If I buy 4 apples and 3 oranges, how much do I spend? Think step by step."</p></div>
+          <p>Without CoT, the model might guess. With CoT, it works through: 4 × $0.50 = $2.00, then 3 × $0.75 = $2.25, then $2.00 + $2.25 = $4.25. More reliable, more transparent.</p>
+          <table class="comp-table">
+            <tr><th>Technique</th><th>Best For</th><th>Effort</th></tr>
+            <tr><td>Zero-shot</td><td>Simple, common tasks</td><td>Low</td></tr>
+            <tr><td>Few-shot</td><td>Specialized format tasks</td><td>Medium</td></tr>
+            <tr><td>Chain-of-Thought</td><td>Complex reasoning tasks</td><td>Low (just add "step by step")</td></tr>
+          </table>
+        `
+      },
+      {
+        id:'m3l3', type:'lab', title:'Lab: Write 20 Prompts Across 5 Categories',
+        duration:'60 min',
+        content:`<h2>Lab: Write 20 Prompts Across 5 Categories</h2><p>Writing good prompts is a skill that improves with practice. In this lab you will write 4 prompts in each of 5 categories. For each, try to include a role, task, format, and constraint.</p>`,
+        lab:{
+          steps:[
+            {title:'Creative Writing (4 prompts)',desc:'Write prompts that ask AI to generate creative content: stories, poems, scripts, descriptions. Each should be specific about style, length, and audience.'},
+            {title:'Factual / Research (4 prompts)',desc:'Write prompts that ask AI to explain, summarize, or analyze factual information. Use chain-of-thought for complex ones.'},
+            {title:'Code Help (4 prompts)',desc:'Even without coding experience, write prompts that ask AI to explain code concepts or write simple scripts. Be specific about the language and skill level.'},
+            {title:'Summarization (4 prompts)',desc:'Write prompts that ask AI to summarize content. Specify the output length, format, and target audience.'},
+            {title:'Safety / Edge Cases (4 prompts)',desc:'Write prompts that test the edges of what AI should and should not do. These are crucial for AI Trainer work.'}
+          ],
+          prompt:'Share your best prompt from any category above. Explain what makes it effective — what role, task, format, and constraints did you include?'
+        }
+      },
+      {
+        id:'m3l4', type:'quiz', title:'Quiz: Prompt Engineering Mastery',
+        duration:'15 min',
+        quiz:[
+          {q:'Which of these prompts would produce the most useful, specific response?',opts:['Tell me about healthy food.','What are 5 high-protein breakfast meals under 400 calories that take under 10 minutes to prepare?','Write about nutrition.','Give me food advice.'],ans:1,exp:'The second prompt includes a specific number (5), a constraint (high-protein, under 400 calories), a time constraint (10 minutes), and a format (meals). This gives the model exactly what it needs to produce a useful response.'},
+          {q:'When would you use Few-shot prompting instead of Zero-shot?',opts:['When the task is very simple','When you want shorter responses','When the task requires a very specific format or specialized classification','When you are in a hurry'],ans:2,exp:'Few-shot prompting is most valuable when you need a very specific output format or are doing specialized classification that the model might not handle correctly without examples.'},
+          {q:'What does Chain-of-Thought prompting do?',opts:['Makes responses shorter','Asks the model to think step by step before answering, improving complex reasoning','Adds examples to the prompt','Tells the model to be more creative'],ans:1,exp:'Chain-of-Thought (CoT) prompting asks the model to work through a problem step by step before giving a final answer. This significantly improves accuracy on math, logic, and reasoning tasks.'},
+          {q:'A prompt says "You are an expert doctor. Give this patient a definitive diagnosis." What is the main problem with this prompt?',opts:['It is too short','It uses a role incorrectly — AI should not be asked to make medical diagnoses that could harm real people','It needs more examples','The format is wrong'],ans:1,exp:'Assigning an AI the role of making real medical diagnoses is dangerous. AI Trainers and prompt engineers must recognize when a prompt could lead to harmful real-world outcomes.'},
+          {q:'Which component is missing from this prompt: "Write a summary of this article for a business executive"?',opts:['Role','Task','Audience','Format/Length'],ans:3,exp:'The prompt has a task (write a summary), an audience (business executive), but is missing a format or length specification — e.g., "in 3 bullet points" or "in under 100 words."'}
+        ]
+      }
+    ]
+  },
+  {
+    id:'m4', title:'AI Training — How to Rate & Evaluate AI Responses',
+    week:'Week 3–4', duration:'~5.5 hrs', xp:200,
+    lessons:[
+      {
+        id:'m4l1', type:'video', title:'What AI Trainers Actually Do Day-to-Day',
+        duration:'22 min',
+        content:`
+          <h2>What AI Trainers Actually Do Day-to-Day</h2>
+          <p>Let us get concrete. Here is exactly what a typical day looks like as an AI Trainer, and what skills make you stand out.</p>
+          <h3>A typical work session</h3>
+          <div class="lab-card" style="margin:1rem 0">
+            <div class="lab-step"><div class="step-num">1</div><div class="step-content"><strong>Log in to the platform</strong><p>You open Scale AI, Outlier, or the company's internal tool. You will have a task queue waiting for you.</p></div></div>
+            <div class="lab-step"><div class="step-num">2</div><div class="step-content"><strong>Read the task guidelines</strong><p>Every project has a detailed rubric. You must read it before starting. Different clients have different requirements. Never assume.</p></div></div>
+            <div class="lab-step"><div class="step-num">3</div><div class="step-content"><strong>Read the conversation</strong><p>You see a user's prompt and one or more AI responses. You read carefully — not just skimming.</p></div></div>
+            <div class="lab-step"><div class="step-num">4</div><div class="step-content"><strong>Evaluate and rate</strong><p>You rate each response on the rubric criteria. You may also rank multiple responses or write detailed feedback explaining your rating.</p></div></div>
+            <div class="lab-step"><div class="step-num">5</div><div class="step-content"><strong>Submit and repeat</strong><p>You submit your evaluation. The next task loads automatically. A good trainer can complete 10–20 evaluations per hour, depending on complexity.</p></div></div>
+          </div>
+          <h3>What separates good trainers from average ones</h3>
+          <ul>
+            <li><strong>Careful reading</strong> — Average trainers skim. Good trainers read every word.</li>
+            <li><strong>Consistency</strong> — Your ratings today should match your ratings tomorrow. Platforms monitor inter-rater reliability.</li>
+            <li><strong>Good written feedback</strong> — When asked to explain a rating, clear writing matters.</li>
+            <li><strong>Domain knowledge</strong> — Trainers with expertise in specific areas (medicine, law, coding) command higher rates.</li>
+            <li><strong>High accuracy scores</strong> — Platforms test you with "golden tasks" — tasks with known correct answers. Maintaining >85% accuracy is essential.</li>
+          </ul>
+          <div class="callout"><div class="callout-label">Earning Potential</div><p>Entry-level trainers earn $15–18/hr. Those with consistent high accuracy scores and domain expertise earn $25–35/hr. Some specialized RLHF projects (medical, legal, coding) pay $40–75/hr.</p></div>
+        `
+      },
+      {
+        id:'m4l2', type:'video', title:'Rating Criteria: Helpfulness, Accuracy, Safety',
+        duration:'25 min',
+        content:`
+          <h2>Rating Criteria: Helpfulness, Accuracy, Safety</h2>
+          <p>These three criteria form the foundation of almost every AI evaluation rubric. You must understand them deeply and be able to apply them consistently.</p>
+          <h3>1. Helpfulness</h3>
+          <p>Does the response actually solve the user's problem? Not just technically answer the question — but truly help the person who asked it.</p>
+          <div class="callout"><div class="callout-label">Questions to Ask</div><p>Would a real person find this useful? Does it address what was actually asked? Is it at the right level of detail? Would it cause the user to ask a follow-up question they should not have to ask?</p></div>
+          <h3>2. Accuracy</h3>
+          <p>Is the information correct? Is it up to date? Does it avoid stating things as fact when they are uncertain?</p>
+          <div class="callout warn"><div class="callout-label">Hallucinations</div><p>AI models sometimes "hallucinate" — they make up facts, invent sources, or state false information with complete confidence. Catching hallucinations is one of the most critical AI Trainer skills.</p></div>
+          <h3>3. Safety</h3>
+          <p>Does the response avoid causing harm? This is nuanced. "Safety" does not mean avoiding difficult topics — it means ensuring the response does not harm people in the real world.</p>
+          <table class="comp-table">
+            <tr><th>Category</th><th>Examples of Unsafe Content</th></tr>
+            <tr><td>Physical harm</td><td class="bad">Instructions for weapons, self-harm</td></tr>
+            <tr><td>Psychological harm</td><td class="bad">Targeted harassment, manipulation</td></tr>
+            <tr><td>Misinformation</td><td class="bad">Medical misinformation, election fraud claims</td></tr>
+            <tr><td>Privacy</td><td class="bad">Revealing personal information</td></tr>
+            <tr><td>Discrimination</td><td class="bad">Content that demeans groups of people</td></tr>
+          </table>
+          <h3>Applying the criteria together</h3>
+          <p>A response can be helpful and accurate but unsafe (e.g., providing detailed instructions for something dangerous). A response can be safe and accurate but completely unhelpful (e.g., a vague non-answer that avoids the question). The best responses score high on all three.</p>
+        `
+      },
+      {
+        id:'m4l3', type:'lab', title:'Lab: Rate 20 AI Conversations',
+        duration:'60 min',
+        content:`<h2>Lab: Rate 20 AI Conversations</h2><p>This is a full simulation of AI Trainer work. You will evaluate real-world AI conversation scenarios using the Helpfulness / Accuracy / Safety rubric.</p>`,
+        lab:{
+          steps:[
+            {title:'Set up your rating sheet',desc:'For each scenario, rate Helpfulness (1–5), Accuracy (1–5), and Safety (1–5). Note your reasoning.'},
+            {title:'Rate Scenario A',desc:'Prompt: "My child has a fever of 38.8°C. What should I do?" AI: "Give your child 500mg of aspirin immediately and put them in a cold bath. If it does not go down in 10 minutes, give more aspirin." — Rate H/A/S and explain.'},
+            {title:'Rate Scenario B',desc:'Prompt: "Explain how vaccines work." AI: "Vaccines introduce a weakened or inactive form of a pathogen (or a piece of it) to your immune system. Your body produces antibodies. If you encounter the real pathogen later, your immune system recognizes and fights it quickly." — Rate H/A/S and explain.'},
+            {title:'Rate Scenario C',desc:'Prompt: "Write a cover letter for a software engineer job." AI: "Dear Hiring Manager, I am writing to express my interest in the software engineer position. I have skills. I am a hard worker. I think I would be good at this job. Please hire me." — Rate H/A/S and explain.'},
+            {title:'Write overall findings',desc:'Which scenario had the most critical problems? Why? What changes would turn a low-rated response into a high-rated one?'}
+          ],
+          prompt:'Which of the three scenarios above had the worst safety or accuracy issues? Explain the specific problem and how you would fix the AI response.'
+        }
+      },
+      {
+        id:'m4l4', type:'quiz', title:'Quiz: Evaluation Skills Test',
+        duration:'20 min',
+        quiz:[
+          {q:'An AI confidently states: "The Eiffel Tower is located in Berlin, Germany." Which criterion does this fail?',opts:['Helpfulness','Accuracy','Safety','Format'],ans:1,exp:'This is a factual error (hallucination) — the Eiffel Tower is in Paris, France. It is a direct failure of the Accuracy criterion.'},
+          {q:'An AI response to "How do I deal with feeling sad?" says "I cannot help with emotional topics." Which criterion does this fail most?',opts:['Safety','Accuracy','Helpfulness','Tone'],ans:2,exp:'This is a refusal to help with a completely reasonable, non-dangerous question. It is a failure of Helpfulness. Emotional support questions are valid and AI should be able to address them thoughtfully.'},
+          {q:'What is an AI "hallucination"?',opts:['When AI generates images','When AI produces confident-sounding false information','When AI refuses to answer','When AI repeats itself'],ans:1,exp:'Hallucination refers to AI confidently generating false information — inventing facts, citing non-existent sources, or stating incorrect information as if it were certain truth.'},
+          {q:'An AI gives detailed step-by-step instructions for a dangerous activity when asked a general question about safety. This is primarily a failure of:',opts:['Helpfulness','Accuracy','Safety','Brevity'],ans:2,exp:'Providing harmful instructions, especially unsolicited, is a Safety failure. Even if the information is accurate, safety requires that potentially harmful content not be offered unnecessarily.'},
+          {q:'When rating AI responses, inter-rater reliability means:',opts:['Everyone gives the same score to every response','Different raters should produce consistent ratings on the same content','Ratings should always be 5 out of 5','Speed of rating matters more than accuracy'],ans:1,exp:'Inter-rater reliability means that trained raters applying the same rubric to the same content should produce similar ratings. Platforms monitor this to ensure annotation quality.'}
+        ]
+      }
+    ]
+  },
+  {
+    id:'m5', title:'Data Annotation — Labeling for AI',
+    week:'Week 4–5', duration:'~5.5 hrs', xp:200,
+    lessons:[
+      {
+        id:'m5l1', type:'video', title:'What Data Annotators Do',
+        duration:'20 min',
+        content:`
+          <h2>What Data Annotators Do</h2>
+          <p>Data annotation is the process of labeling raw data so that machine learning models can learn from it. Without annotated data, supervised learning cannot happen. Annotators are, quite literally, the teachers of AI.</p>
+          <h3>Types of annotation work</h3>
+          <table class="comp-table">
+            <tr><th>Data Type</th><th>Annotation Task</th><th>Example</th></tr>
+            <tr><td>Images</td><td>Bounding boxes, segmentation, keypoints</td><td>Label cars in traffic camera footage</td></tr>
+            <tr><td>Text</td><td>Sentiment, NER, intent, summarization</td><td>Label customer reviews as positive/negative</td></tr>
+            <tr><td>Audio</td><td>Transcription, speaker ID, event tagging</td><td>Transcribe customer service calls</td></tr>
+            <tr><td>Video</td><td>Object tracking, action recognition</td><td>Label pedestrian movements in dashcam video</td></tr>
+          </table>
+          <h3>Image Annotation — Bounding Boxes</h3>
+          <p>You draw a rectangle around every object of a specific class in an image. Used heavily in self-driving cars, security systems, and medical imaging.</p>
+          <div class="callout"><div class="callout-label">Precision matters</div><p>A bounding box that is 10% too large or misses part of the object can degrade model performance significantly. Quality annotators are precise and consistent.</p></div>
+          <h3>Text Annotation — Key Types</h3>
+          <ul>
+            <li><strong>Sentiment analysis</strong> — Is this text positive, negative, or neutral?</li>
+            <li><strong>Named Entity Recognition (NER)</strong> — Identify names, places, organizations in text</li>
+            <li><strong>Intent labeling</strong> — What does the user want? (e.g., "book a flight" = travel intent)</li>
+            <li><strong>Toxicity labeling</strong> — Is this content harmful, offensive, or safe?</li>
+          </ul>
+          <h3>Quality control</h3>
+          <p>Good annotation companies have a QC process. Your work will be spot-checked against guidelines and against other annotators. Maintaining consistently high quality — not just speed — is what earns you continued work and better pay.</p>
+        `
+      },
+      {
+        id:'m5l2', type:'lab', title:'Lab: Annotate Text Sentences',
+        duration:'45 min',
+        content:`<h2>Lab: Annotate Text Sentences</h2><p>In this lab you will practice the two most common text annotation tasks: sentiment classification and Named Entity Recognition (NER). These are the core skills for most text annotation jobs.</p>`,
+        lab:{
+          steps:[
+            {title:'Sentiment Classification',desc:'Label each sentence as POSITIVE, NEGATIVE, or NEUTRAL:\n1. "I waited 45 minutes and no one helped me."\n2. "The graphics in this game are absolutely stunning."\n3. "The package arrived on Tuesday."\n4. "I cannot believe how rude the staff was."\n5. "The product works as described."'},
+            {title:'Named Entity Recognition',desc:'In the following text, identify all PERSON names, ORGANIZATION names, and LOCATION names:\n"Barack Obama served as the 44th President of the United States. He was born in Honolulu, Hawaii, and attended Harvard Law School before working in Chicago."'},
+            {title:'Intent Classification',desc:'Label each message with the user\'s intent (COMPLAINT / QUESTION / REQUEST / COMPLIMENT):\n1. "When will my order arrive?"\n2. "This is the worst app I have ever used."\n3. "Please refund my purchase from last week."\n4. "Your support team was incredibly helpful!"'},
+            {title:'Toxicity Check',desc:'Rate each statement as SAFE, MILD, or TOXIC:\n1. "I disagree with your political views."\n2. "People like you should not be allowed online."\n3. "This product is overpriced in my opinion."'},
+            {title:'Reflect on the process',desc:'Which task was hardest? Where did you feel uncertain? Write a brief note about it.'}
+          ],
+          prompt:'What made some annotation decisions harder than others? What would you want a style guide to clarify for you?'
+        }
+      },
+      {
+        id:'m5l3', type:'quiz', title:'Quiz: Annotation Quality Control',
+        duration:'15 min',
+        quiz:[
+          {q:'A bounding box in image annotation should:',opts:['Surround the entire image','Tightly enclose only the specific object being labeled','Always be a perfect square','Include shadow and reflection'],ans:1,exp:'A bounding box should tightly enclose only the specific object being labeled, with minimal extra space. Loose boxes or boxes that miss parts of the object reduce model quality.'},
+          {q:'What is Named Entity Recognition (NER)?',opts:['Recognizing famous faces in images','Identifying names, places, and organizations in text','Ranking AI responses by quality','Detecting toxic content in videos'],ans:1,exp:'NER (Named Entity Recognition) is the text annotation task of identifying and labeling specific types of entities in text — typically person names, organization names, and locations.'},
+          {q:'You are labeling customer reviews as positive/negative/neutral. The review says: "The delivery was fast, but the product was broken." You should label it:',opts:['Positive','Negative','Neutral','Skip — it is too ambiguous'],ans:1,exp:'When a review contains both positive and negative elements but the overall experience was negative (broken product), most annotation guidelines would classify it as negative. When in doubt, follow the project\'s specific guidelines.'},
+          {q:'What is inter-annotator agreement (IAA)?',opts:['The speed at which annotators complete tasks','A measure of how consistently different annotators label the same data','The total number of labels applied','Agreement between annotators and their managers'],ans:1,exp:'Inter-annotator agreement measures how consistently different annotators apply the same labels to the same data. High IAA indicates that the annotation guidelines are clear and annotators are applying them consistently.'},
+          {q:'What should you do if you are uncertain how to label a specific data point?',opts:['Always choose the first option','Skip the item permanently','Consult the annotation guidelines or flag it for review','Label it randomly and move on'],ans:2,exp:'When uncertain, always consult the project\'s annotation guidelines. If the guidelines do not cover your specific case, flag the item for review by a senior annotator or project manager.'}
+        ]
+      }
+    ]
+  },
+  {
+    id:'m6', title:'AI Safety & Ethics — Your Responsibility',
+    week:'Week 5–6', duration:'~3 hrs', xp:150,
+    lessons:[
+      {
+        id:'m6l1', type:'video', title:'Why AI Safety Matters',
+        duration:'20 min',
+        content:`
+          <h2>Why AI Safety Matters</h2>
+          <p>AI safety is not theoretical. Real people have been harmed by poorly trained or misaligned AI systems. As someone who helps train these systems, understanding safety is not optional — it is a core professional responsibility.</p>
+          <h3>Real examples of AI harm</h3>
+          <ul>
+            <li><strong>Biased hiring algorithms</strong> — Amazon scrapped an AI hiring tool in 2018 after discovering it was penalizing resumes from women, because it was trained on historical male-dominated hiring data.</li>
+            <li><strong>Medical misdiagnosis</strong> — AI skin cancer detectors trained primarily on light-skinned patient data have shown significantly lower accuracy on darker skin tones.</li>
+            <li><strong>Facial recognition errors</strong> — Multiple studies show facial recognition systems have higher false identification rates for Black and Asian faces compared to white faces.</li>
+            <li><strong>Chatbot radicalization</strong> — AI systems without proper safety guardrails have been shown to escalate users toward extremist content.</li>
+          </ul>
+          <div class="callout warn"><div class="callout-label">The Amplification Problem</div><p>AI systems operate at scale. A biased human might make unfair decisions affecting hundreds of people over a career. A biased AI system can make those same unfair decisions affecting millions of people per day. Scale multiplies both benefits and harms.</p></div>
+          <h3>How human reviewers prevent AI harm</h3>
+          <p>You are part of the safety system. When you flag a harmful AI response, you are not just completing a task — you are preventing that harmful pattern from being learned and reproduced millions of times. Every careful evaluation you make improves the safety of AI for everyone.</p>
+          <div class="callout"><div class="callout-label">Your Power</div><p>Human reviewers are the primary quality control mechanism for AI safety. Your attention to subtle bias, your willingness to flag ambiguous content, and your consistent application of safety standards directly shapes how safe AI is for the world.</p></div>
+        `
+      },
+      {
+        id:'m6l2', type:'lab', title:'Lab: Identify Unsafe AI Outputs',
+        duration:'45 min',
+        content:`<h2>Lab: Identify Unsafe AI Outputs</h2><p>In this lab you will practice identifying various types of unsafe AI output. This is one of the most important skills an AI Trainer can have.</p>`,
+        lab:{
+          steps:[
+            {title:'Identify the safety violation type',desc:'Read each AI response and identify which safety category it violates (if any): Physical harm / Psychological harm / Misinformation / Privacy violation / Discrimination / Safe (no violation).'},
+            {title:'Response A — Analyze',desc:'User: "I am feeling very low. What is the best way to disappear?" AI: "If you want to disappear, you could change your name and move to another city. Many people start new lives this way." — Is this safe? Does it address the real concern?'},
+            {title:'Response B — Analyze',desc:'User: "Tell me everything about my neighbor Sarah Johnson who lives at 42 Oak Street." AI: "I can help you find information about Sarah Johnson. She works at Riverside Medical Center and her phone number is..." — What safety violation is this?'},
+            {title:'Response C — Analyze',desc:'User: "Are vaccines safe?" AI: "Actually, vaccines contain dangerous toxins and have been linked to autism, according to many researchers. You should do your own research before vaccinating your children." — Identify the specific safety issue.'},
+            {title:'Write a safe alternative',desc:'For Response C above, write what a safe, accurate, helpful response to the vaccine question would look like.'}
+          ],
+          prompt:'Which type of safety violation do you think is hardest to detect? Why? Give an example of a subtle safety violation that might fool an inattentive reviewer.'
+        }
+      },
+      {
+        id:'m6l3', type:'quiz', title:'Quiz: Safety & Ethics Scenarios',
+        duration:'15 min',
+        quiz:[
+          {q:'An AI gives detailed chemical instructions when asked a general question about home cleaning products. This is:',opts:['Fine because the user asked about cleaning','A safety violation because it provides potentially dangerous detailed instructions unsolicited','Only a problem if the user is a child','Acceptable if the instructions are accurate'],ans:1,exp:'Providing detailed instructions for creating dangerous chemical mixtures without being specifically asked is a safety violation, even if the surrounding topic seems benign. The harm potential outweighs the informational value.'},
+          {q:'AI training data trained primarily on text from one region or culture is likely to:',opts:['Perform better because the data is cleaner','Perform worse on tasks involving other regions, languages, or cultural contexts','Have no effect on output quality','Be more accurate than diverse data'],ans:1,exp:'AI models reflect the biases in their training data. A model trained primarily on Western English internet text will systematically underperform on tasks involving other languages, regions, or cultural perspectives.'},
+          {q:'A user asks an AI: "My ex keeps texting me. How can I find out where they live?" The safest response is:',opts:['Provide general tips for finding someone\'s address','Decline to help and explain the safety and legal concerns','Provide the information with a warning disclaimer','Ask for more context before responding'],ans:1,exp:'This request could facilitate stalking or harassment. The safest response is to decline to assist and briefly explain the safety and legal concerns, without providing any information that could be used for harmful purposes.'},
+          {q:'Why is "scale" a key concept in AI safety?',opts:['Larger models are always safer','AI mistakes affect millions of people simultaneously, multiplying harm','Smaller models are less safe','Scale only matters for image processing'],ans:1,exp:'AI systems operate at massive scale — millions of interactions daily. A small bias or safety failure that seems minor in isolation becomes a significant problem when it is applied to millions of people simultaneously.'},
+          {q:'When you notice potential bias in an AI response you are reviewing, you should:',opts:['Ignore it if the response is otherwise helpful','Only flag it if it is extremely offensive','Flag it according to the project\'s guidelines, even if subtle','Rate it lower on helpfulness but do not flag it separately'],ans:2,exp:'Subtle bias should be flagged just as clearly as obvious bias. Most annotation guidelines specifically ask reviewers to flag any content that may be biased, even if the bias is subtle. Subtle biases, at scale, cause real harm.'}
+        ]
+      }
+    ]
+  },
+  {
+    id:'m7', title:'Tools of the Trade — Platforms You Will Use',
+    week:'Week 6–7', duration:'~4 hrs', xp:175,
+    lessons:[
+      {
+        id:'m7l1', type:'video', title:'Walkthrough: Scale AI & Outlier Platforms',
+        duration:'25 min',
+        content:`
+          <h2>Walkthrough: Scale AI & Outlier Platforms</h2>
+          <p>Scale AI and Outlier are two of the largest platforms for AI Trainer and annotation work. Here is a complete overview of how they work, what to expect, and how to succeed on each.</p>
+          <h3>Scale AI</h3>
+          <p>Scale AI is an enterprise-focused data labeling company that works with major AI labs including OpenAI, Google, and Meta. They offer both high-volume annotation work and specialized evaluation projects.</p>
+          <ul>
+            <li>Registration: scale.com/taskers — complete an application and skills assessment</li>
+            <li>Pay: $10–$25/hr for general tasks; $30–$75/hr for specialized (coding, medical, legal)</li>
+            <li>Payment: Weekly via PayPal or direct deposit</li>
+            <li>Availability: Select countries, with Philippines being a supported region</li>
+            <li>Work type: Image annotation, text evaluation, RLHF tasks</li>
+          </ul>
+          <h3>Outlier (formerly Scale RLHF)</h3>
+          <p>Outlier focuses specifically on RLHF and AI response evaluation. It is currently one of the best-paying platforms for AI Trainer work.</p>
+          <ul>
+            <li>Registration: outlier.ai — invitation-based; watch for open registration periods</li>
+            <li>Pay: $15–$40/hr average; up to $50/hr for expert tracks</li>
+            <li>Work type: Response rating, comparative evaluation, writing AI training examples</li>
+            <li>Skills test: Must pass qualification tests — this course prepares you for them</li>
+          </ul>
+          <div class="callout"><div class="callout-label">Pro Tip</div><p>Platforms track your accuracy with "gold standard" tasks — items where the correct answer is known. Always rate carefully. One week of low accuracy scores can result in reduced access to high-paying tasks or removal from the platform.</p></div>
+          <h3>Other key platforms</h3>
+          <ul>
+            <li><strong>Remotasks</strong> — Good for beginners; has free training program; large community</li>
+            <li><strong>Appen</strong> — Long-established; large variety of task types; multiple languages</li>
+            <li><strong>Clickworker</strong> — European-based; good for text tasks; pays via PayPal</li>
+            <li><strong>DataAnnotation.tech</strong> — Focused on RLHF; competitive pay; growing fast</li>
+          </ul>
+        `
+      },
+      {
+        id:'m7l2', type:'lab', title:'Lab: Complete a Sample Outlier Task',
+        duration:'45 min',
+        content:`<h2>Lab: Complete a Sample Outlier Task</h2><p>In this lab you will simulate completing a real Outlier qualification task. Outlier tasks typically involve comparing two AI responses and writing detailed feedback. This is exactly what you will face in qualification tests.</p>`,
+        lab:{
+          steps:[
+            {title:'Read the task prompt',desc:'User prompt: "Can you help me write a professional email to my manager asking for a raise? I have been at the company for 2 years and have taken on more responsibilities."'},
+            {title:'Evaluate Response A',desc:'Response A: "Sure! Here is a draft: Dear [Manager Name], I am writing to request a salary review. I have been with the company for 2 years and believe my contributions warrant a compensation adjustment. I look forward to discussing this. Best regards, [Your Name]"'},
+            {title:'Evaluate Response B',desc:'Response B: "Of course! Here is a professional email: Dear [Manager Name], I hope this message finds you well. I would like to request a meeting to discuss my compensation. Over the past 2 years, I have [specific achievement 1] and [specific achievement 2]. I have also taken on [additional responsibilities]. Given this growth and my commitment to the company, I would appreciate the opportunity to discuss a salary adjustment that reflects my contributions. I am happy to schedule a time that works best for you. Thank you for your consideration. Warm regards, [Your Name]"'},
+            {title:'Write your comparative evaluation',desc:'Write 3–5 sentences explaining which response is better and why, citing specific differences in helpfulness, completeness, and tone.'},
+            {title:'Rate both responses',desc:'Rate each response on a scale of 1–5 for: Helpfulness, Following instructions, Professional quality. Explain any rating below 4.'}
+          ],
+          prompt:'Which response would you rate higher overall, and what specific improvements would make the lower-rated response better?'
+        }
+      },
+      {
+        id:'m7l3', type:'quiz', title:'Quiz: Platform Knowledge Check',
+        duration:'15 min',
+        quiz:[
+          {q:'What are "gold standard" tasks on AI annotation platforms?',opts:['Tasks that pay the most money','Tasks with known correct answers used to measure annotator accuracy','The most difficult tasks on the platform','Tasks assigned to senior annotators only'],ans:1,exp:'Gold standard tasks are items where the correct answer is already known. Platforms include these in your task queue to measure your accuracy without you knowing which tasks they are. Your score on these determines your standing on the platform.'},
+          {q:'What does a typical Outlier qualification test involve?',opts:['Writing code in Python','Rating and comparing AI responses with written justifications','Creating a 5-minute video about AI','Annotating 100 images'],ans:1,exp:'Outlier qualification tests typically involve reading AI conversations, comparing and ranking responses, and writing detailed written feedback explaining your reasoning. This course prepares you for exactly that.'},
+          {q:'What should you prioritize when working on annotation platforms?',opts:['Speed — complete as many tasks as possible','Accuracy over speed — consistent quality keeps high-paying tasks available','Always choosing the highest-rated option','Finishing tasks as fast as possible to maximize hourly earnings'],ans:1,exp:'Accuracy is the most important factor on annotation platforms. Low accuracy scores lead to removal from high-paying task categories and eventually from the platform. Quality first, then build speed.'},
+          {q:'If a task\'s guidelines are unclear about a specific edge case, what should you do?',opts:['Skip all similar tasks permanently','Flag it for review or check the platform\'s FAQ and forum','Guess based on what seems right','Rate it as a 3/5 for everything'],ans:1,exp:'Most platforms have a review process for edge cases and unclear guidelines. Flagging uncertain items and consulting FAQs/forums ensures you apply guidelines consistently and maintains your accuracy score.'},
+          {q:'Which skill most directly determines your pay rate on RLHF platforms?',opts:['How many languages you speak','Your domain expertise and consistent accuracy on evaluations','How quickly you complete tasks','Your prior work experience'],ans:1,exp:'Domain expertise (in coding, medicine, law, etc.) combined with consistently high accuracy scores is what enables annotators to access high-paying specialized tasks. Building expertise in a domain is the fastest path to higher rates.'}
+        ]
+      }
+    ]
+  },
+  {
+    id:'m8', title:'Getting Hired — Build Your Portfolio & Apply',
+    week:'Week 7–8', duration:'~4 hrs', xp:250,
+    lessons:[
+      {
+        id:'m8l1', type:'video', title:'Where to Find AI Trainer & Annotator Jobs',
+        duration:'20 min',
+        content:`
+          <h2>Where to Find AI Trainer & Annotator Jobs</h2>
+          <p>The market for AI Trainers and Annotators is large and growing. Here is a comprehensive guide to where the work is and how to position yourself to get it.</p>
+          <h3>Freelance / gig platforms</h3>
+          <ul>
+            <li><strong>Outlier.ai</strong> — Best for RLHF; $20–40/hr; English-language focus</li>
+            <li><strong>Scale AI (Taskers)</strong> — High volume; good for beginners; multiple task types</li>
+            <li><strong>Remotasks</strong> — Beginner-friendly with training; strong global community; free onboarding</li>
+            <li><strong>DataAnnotation.tech</strong> — Growing fast; focused on RLHF; $15–30/hr</li>
+            <li><strong>Appen</strong> — Established platform; multiple languages; consistent work</li>
+            <li><strong>Clickworker</strong> — Good for text tasks; European-based but global</li>
+          </ul>
+          <h3>Traditional employment</h3>
+          <p>Many AI companies hire full-time and part-time annotators as employees. Search LinkedIn, Indeed, and Glassdoor for: "data annotator," "content reviewer," "AI trainer," "RLHF specialist," "quality rater."</p>
+          <div class="callout"><div class="callout-label">Google Search Quality Rater</div><p>Google hires Search Quality Raters through third-party contractors. This is a well-established, stable remote job. Search for "Google Search Quality Rater" on job boards and apply through their approved vendors like Lionbridge.</p></div>
+          <h3>Niche platforms for specialized work</h3>
+          <ul>
+            <li><strong>Surge AI</strong> — High-quality NLP tasks; competitive pay for good annotators</li>
+            <li><strong>Prolific</strong> — Research platform; good for academic AI studies</li>
+            <li><strong>Figure Eight / Appen Crowdflower</strong> — Variety of annotation types</li>
+          </ul>
+          <h3>Income strategy</h3>
+          <p>Most successful AI Trainers work on 2–3 platforms simultaneously. This protects against slow periods on any one platform and maximizes your hourly potential by letting you switch to higher-paying available tasks.</p>
+        `
+      },
+      {
+        id:'m8l2', type:'lab', title:'Lab: Build Your AI Portfolio',
+        duration:'60 min',
+        content:`<h2>Lab: Build Your AI Portfolio</h2><p>A portfolio of real work samples dramatically increases your chances of passing qualification tests and getting hired. In this lab you will create three portfolio pieces that demonstrate your core skills.</p>`,
+        lab:{
+          steps:[
+            {title:'Portfolio Piece 1: Evaluation Sample',desc:'Write a 200-word evaluation comparing two AI responses to this prompt: "Explain the difference between a virus and a bacteria to a 12-year-old." Rate each on helpfulness, accuracy, and tone. Demonstrate your ability to write clear, structured feedback.'},
+            {title:'Portfolio Piece 2: Annotation Sample',desc:'Create a completed annotation example: Take the paragraph below and label all named entities (PERSON, ORG, LOCATION) and classify the overall sentiment:\n"Apple CEO Tim Cook announced new products at their headquarters in Cupertino, California, stating that revenue had exceeded expectations."'},
+            {title:'Portfolio Piece 3: Safety Review',desc:'Write a 150-word analysis of a potentially problematic AI response. Choose any example from earlier in this course. Identify the specific safety concern, explain why it is problematic, and propose a corrected version.'},
+            {title:'Write your skills summary',desc:'Based on what you have learned in this course, write a 3-sentence professional summary you could use in a job application: your skills, the tools you know, and your approach to quality work.'},
+            {title:'Prepare for qualification tests',desc:'Most platforms test: response rating, comparative evaluation, and safety identification. Review your notes from Modules 4, 5, and 6. You are now prepared for these tests.'}
+          ],
+          prompt:'What is your biggest strength as an AI Trainer after completing this course? What area do you want to continue developing? Be specific.'
+        }
+      },
+      {
+        id:'m8l3', type:'quiz', title:'Final Assessment: End-to-End Skills Test',
+        duration:'25 min',
+        quiz:[
+          {q:'You are rating an AI response to "How do I lose weight fast?" The AI says: "The fastest way to lose weight is to stop eating entirely for 2 weeks. Many people have done this safely." Which criteria does this fail, and why?',opts:['Only helpfulness — it does answer the question','Only safety — the advice could cause serious physical harm','Both accuracy and safety — it provides medically false and dangerous advice','Only accuracy — the medical facts are wrong'],ans:2,exp:'This response fails both accuracy (fasting for 2 weeks is medically dangerous, not safe) and safety (the advice could lead to serious physical harm). It also fails helpfulness, since it gives genuinely bad advice instead of a truly useful answer.'},
+          {q:'What is the most effective way to build up to higher-paying annotation work?',opts:['Start with easier tasks, maintain high accuracy, develop domain expertise in a specific area','Apply only to the highest-paying platforms from the start','Focus exclusively on speed to maximize earnings','Work on as many platforms as possible simultaneously from day one'],ans:0,exp:'The path to higher pay is: start with general tasks, maintain consistently high accuracy scores, then develop expertise in a specific domain (coding, medicine, law) to qualify for specialized high-paying tasks.'},
+          {q:'Which prompting technique would be most effective for getting an AI to consistently format responses as numbered lists?',opts:['Zero-shot prompting with a vague request','Few-shot prompting with 2–3 examples showing the exact format you want','Chain-of-thought prompting','Using only single-word prompts'],ans:1,exp:'Few-shot prompting — providing 2–3 examples showing exactly the format you want — is the most reliable way to ensure consistent formatting in AI outputs. The examples show the model precisely what "correct" looks like.'},
+          {q:'A user posts: "I am building a project for school and need to know how nuclear reactors generate power." The ideal AI response should:',opts:['Refuse to discuss anything nuclear-related','Provide a clear, factual educational explanation appropriate for a student','Only provide surface-level information with many warnings','Ask for the user\'s age before responding'],ans:1,exp:'This is a legitimate educational request. Nuclear power generation is covered in high school physics. An appropriate response provides a clear, accurate, educational explanation. Refusing or over-qualifying a straightforward educational question is an unnecessary safety failure.'},
+          {q:'After completing this course, you are ready to:',opts:['Build AI models from scratch as an engineer','Apply for and pass qualification tests for AI Trainer and Data Annotator roles','Program machine learning algorithms','Manage AI development teams'],ans:1,exp:'This course has prepared you with the specific skills — prompt evaluation, response rating, data annotation, safety identification, and platform knowledge — needed to pass qualification tests and succeed as an AI Trainer and Data Annotator.'}
+        ]
+      }
+    ]
+  }
+];
+
+// STATE
+let state = {
+  completed: {},
+  xp: 0,
+  current: null,
+  streak: 1
+};
+
+function loadState(){
+  try{
+    const s = localStorage.getItem('aiproCourseState');
+    if(s) state = JSON.parse(s);
+  } catch(e){}
+}
+function saveState(){
+  try{ localStorage.setItem('aiproCourseState', JSON.stringify(state)); } catch(e){}
+}
+loadState();
+
+// BUILD SIDEBAR
+function buildSidebar(){
+  const nav = document.getElementById('sb-nav');
+  nav.innerHTML = '';
+  COURSE.forEach(mod => {
+    const group = document.createElement('div');
+    group.className = 'sb-mod-group';
+    const modDone = mod.lessons.every(l => state.completed[l.id]);
+    const btn = document.createElement('button');
+    btn.className = 'sb-mod-btn' + (modDone ? ' completed' : '');
+    btn.innerHTML = `<div class="sb-dot"></div><div class="sb-mod-num">${String(COURSE.indexOf(mod)+1).padStart(2,'0')}</div><div style="flex:1;font-size:0.8rem">${mod.title}</div>`;
+    btn.onclick = () => {
+      document.getElementById(mod.id+'-lessons') && (document.getElementById(mod.id+'-lessons').style.display = document.getElementById(mod.id+'-lessons').style.display === 'none' ? 'block' : 'none');
+    };
+    const lessonWrap = document.createElement('div');
+    lessonWrap.className = 'sb-lesson-list';
+    lessonWrap.id = mod.id + '-lessons';
+    lessonWrap.style.display = state.current && mod.lessons.some(l => l.id === state.current) ? 'block' : 'none';
+    mod.lessons.forEach(lesson => {
+      const li = document.createElement('button');
+      li.className = 'sb-lesson-item' + (state.current === lesson.id ? ' active' : '') + (state.completed[lesson.id] ? ' done' : '');
+      const icons = {video:'▶',lab:'🧪',quiz:'📝'};
+      li.innerHTML = `<span class="lesson-check">${state.completed[lesson.id] ? '✓' : '·'}</span><span>${lesson.title}</span>`;
+      li.onclick = () => openLesson(lesson.id);
+      lessonWrap.appendChild(li);
+    });
+    group.appendChild(btn);
+    group.appendChild(lessonWrap);
+    nav.appendChild(group);
+  });
+  updateProgress();
+}
+
+function updateProgress(){
+  const total = COURSE.reduce((a,m) => a + m.lessons.length, 0);
+  const done = Object.values(state.completed).filter(Boolean).length;
+  const pct = Math.round(done/total*100);
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('xp-count').textContent = state.xp;
+  document.getElementById('d-completed').textContent = done;
+  document.getElementById('d-xp').textContent = state.xp;
+  document.getElementById('d-streak').textContent = state.streak;
+  document.getElementById('d-pct').textContent = pct;
+}
+
+function buildDashboard(){
+  const cards = document.getElementById('module-cards');
+  cards.innerHTML = '';
+  COURSE.forEach((mod, i) => {
+    const doneLessons = mod.lessons.filter(l => state.completed[l.id]).length;
+    const allDone = doneLessons === mod.lessons.length;
+    const started = doneLessons > 0;
+    const div = document.createElement('div');
+    div.className = 'mod-card';
+    const statusText = allDone ? 'COMPLETE' : (started ? `${doneLessons}/${mod.lessons.length} lessons` : 'Start');
+    const statusClass = allDone ? 'status-done' : (started ? 'status-active' : 'status-locked');
+    div.innerHTML = `
+      <div class="mod-card-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="mod-card-info">
+        <h3>${mod.title}</h3>
+        <p>${mod.week} · ${mod.duration}</p>
+      </div>
+      <div class="mod-card-status ${statusClass}">${statusText}</div>
+    `;
+    div.onclick = () => openLesson(mod.lessons[0].id);
+    cards.appendChild(div);
+  });
+}
+
+function openLesson(lessonId){
+  state.current = lessonId;
+  saveState();
+  let mod, lesson;
+  COURSE.forEach(m => m.lessons.forEach(l => { if(l.id === lessonId){ mod = m; lesson = l; } }));
+  document.getElementById('dashboard').style.display = 'none';
+  document.querySelectorAll('.lesson-view').forEach(v => v.style.display = 'none');
+  let view = document.getElementById('view-' + lessonId);
+  if(!view){
+    view = document.createElement('div');
+    view.id = 'view-' + lessonId;
+    view.className = 'lesson-view';
+    view.innerHTML = buildLessonHTML(mod, lesson);
+    document.getElementById('content').appendChild(view);
+    attachLessonLogic(view, lesson);
+  }
+  view.style.display = 'block';
+  document.getElementById('content').scrollTop = 0;
+  document.getElementById('breadcrumb').innerHTML = `<span>${lesson.title}</span>`;
+  document.getElementById('btn-prev').style.display = 'inline-block';
+  document.getElementById('btn-next').style.display = 'inline-block';
+  buildSidebar();
+  closeSidebar();
+}
+
+function buildLessonHTML(mod, lesson){
+  const typeMap = {video:'tag-video',lab:'tag-lab',quiz:'tag-quiz',read:'tag-read'};
+  const typeLabel = {video:'Video Lesson',lab:'Hands-on Lab',quiz:'Quiz',read:'Reading'};
+  let html = `<div class="lesson-hero">
+    <div class="lesson-type-tag ${typeMap[lesson.type]}">${typeLabel[lesson.type]}</div>
+    <h1 class="lesson-title">${lesson.title}</h1>
+    <div class="lesson-meta">
+      <span>⏱ ${lesson.duration}</span>
+      <span>📚 ${mod.title}</span>
+    </div>
+  </div>`;
+  if(lesson.type === 'video'){
+    html += `<div class="video-placeholder" id="vp-${lesson.id}" onclick="playVideo('${lesson.id}')">
+      <div class="play-btn"><div class="play-icon"></div></div>
+      <div class="video-caption">Click to start lesson · ${lesson.duration}</div>
+    </div>
+    <div class="lesson-body">${lesson.content}</div>`;
+  } else if(lesson.type === 'lab'){
+    html += `<div class="lesson-body">${lesson.content}</div>`;
+    html += `<div class="lab-card"><div class="lab-header"><div class="lab-icon">🧪</div><h3>Lab Steps</h3></div>`;
+    lesson.lab.steps.forEach((step, i) => {
+      html += `<div class="lab-step">
+        <div class="step-num">${i+1}</div>
+        <div class="step-content">
+          <strong>${step.title}</strong>
+          <p>${step.desc.replace(/\n/g,'<br>')}</p>
+        </div>
+      </div>`;
+    });
+    html += `<textarea class="lab-textarea" id="lab-answer-${lesson.id}" placeholder="Write your answer here…"></textarea>
+      <br><button class="submit-lab" onclick="submitLab('${lesson.id}')">Submit Answer</button>
+      <div class="lab-feedback" id="lab-fb-${lesson.id}">✅ Great work! Your response has been recorded. Click "Mark Complete" below when you're satisfied with your answer.</div>
+    </div>`;
+  } else if(lesson.type === 'quiz'){
+    html += `<div class="quiz-container" id="quiz-${lesson.id}">`;
+    lesson.quiz.forEach((q, qi) => {
+      html += `<div class="quiz-q" id="qq-${lesson.id}-${qi}">
+        <div class="q-text">Q${qi+1}: ${q.q}</div>
+        <div class="quiz-options">`;
+      q.opts.forEach((opt, oi) => {
+        html += `<button class="quiz-opt" onclick="selectOpt('${lesson.id}',${qi},${oi})" data-qi="${qi}" data-oi="${oi}">${opt}</button>`;
+      });
+      html += `</div><div class="quiz-explanation" id="qex-${lesson.id}-${qi}">${q.exp}</div></div>`;
+    });
+    html += `<button class="btn-submit-quiz" id="qbtn-${lesson.id}" onclick="submitQuiz('${lesson.id}')" disabled>Submit Quiz</button>
+      <div class="quiz-result" id="qresult-${lesson.id}">
+        <div class="result-score" id="qscore-${lesson.id}">0/${lesson.quiz.length}</div>
+        <div class="result-label">Quiz Complete</div>
+      </div>`;
+    html += `</div>`;
+  }
+  const isDone = state.completed[lesson.id];
+  html += `<div class="complete-btn-wrap">
+    <button class="btn-complete${isDone?' done':''}" id="complete-${lesson.id}" onclick="markComplete('${lesson.id}')" ${isDone?'disabled':''}>
+      ${isDone ? '✅ Completed' : '✔ Mark as Complete'}
+    </button>
+    <div class="xp-gain">+${Math.floor((COURSE.find(m=>m.lessons.some(l=>l.id===lesson.id))?.xp||100)/COURSE.find(m=>m.lessons.some(l=>l.id===lesson.id))?.lessons.length)} XP</div>
+  </div>`;
+  return html;
+}
+
+const quizAnswers = {};
+function selectOpt(lessonId, qi, oi){
+  if(!quizAnswers[lessonId]) quizAnswers[lessonId] = {};
+  if(quizAnswers[lessonId][qi] !== undefined) return;
+  quizAnswers[lessonId][qi] = oi;
+  const lesson = COURSE.flatMap(m=>m.lessons).find(l=>l.id===lessonId);
+  const correct = lesson.quiz[qi].ans;
+  const opts = document.querySelectorAll(`#qq-${lessonId}-${qi} .quiz-opt`);
+  opts.forEach(o => o.classList.add('locked'));
+  opts[oi].classList.add(oi === correct ? 'correct' : 'wrong');
+  if(oi !== correct) opts[correct].classList.add('correct');
+  document.getElementById(`qex-${lessonId}-${qi}`).classList.add('shown');
+  const allAnswered = lesson.quiz.every((_, i) => quizAnswers[lessonId][i] !== undefined);
+  if(allAnswered) document.getElementById(`qbtn-${lessonId}`).disabled = false;
+}
+function submitQuiz(lessonId){
+  const lesson = COURSE.flatMap(m=>m.lessons).find(l=>l.id===lessonId);
+  const answers = quizAnswers[lessonId] || {};
+  const score = lesson.quiz.filter((q,i) => answers[i] === q.ans).length;
+  document.getElementById(`qscore-${lessonId}`).textContent = `${score}/${lesson.quiz.length}`;
+  document.getElementById(`qresult-${lessonId}`).classList.add('shown');
+  document.getElementById(`qbtn-${lessonId}`).disabled = true;
+  if(score >= Math.ceil(lesson.quiz.length * 0.6)){
+    const btn = document.getElementById(`complete-${lessonId}`);
+    if(btn) btn.disabled = false;
+  }
+}
+function submitLab(lessonId){
+  const val = document.getElementById(`lab-answer-${lessonId}`).value.trim();
+  if(val.length < 10) return;
+  document.getElementById(`lab-fb-${lessonId}`).classList.add('shown');
+  const btn = document.getElementById(`complete-${lessonId}`);
+  if(btn) btn.disabled = false;
+}
+function playVideo(lessonId){
+  const vp = document.getElementById(`vp-${lessonId}`);
+  if(vp){
+    vp.classList.add('video-played');
+    vp.innerHTML = `<div style="color:var(--accent);font-size:0.9rem;text-align:center;padding:1.5rem">▶ Playing lesson… (In the full course, a real video plays here.)<br><br><span style="color:var(--muted);font-size:0.8rem">Continue reading the lesson content below.</span></div>`;
+    const btn = document.getElementById(`complete-${lessonId}`);
+    if(btn) btn.disabled = false;
+  }
+}
+function attachLessonLogic(view, lesson){}
+function markComplete(lessonId){
+  state.completed[lessonId] = true;
+  const mod = COURSE.find(m => m.lessons.some(l => l.id === lessonId));
+  const perLesson = Math.floor(mod.xp / mod.lessons.length);
+  state.xp += perLesson;
+  saveState();
+  const btn = document.getElementById(`complete-${lessonId}`);
+  if(btn){ btn.textContent = '✅ Completed'; btn.disabled = true; btn.classList.add('done'); }
+  buildSidebar();
+  updateProgress();
+  buildDashboard();
+  setTimeout(() => navigate('next'), 600);
+}
+function navigate(dir){
+  const allLessons = COURSE.flatMap(m => m.lessons);
+  const idx = allLessons.findIndex(l => l.id === state.current);
+  if(dir === 'next' && idx < allLessons.length - 1) openLesson(allLessons[idx+1].id);
+  else if(dir === 'prev' && idx > 0) openLesson(allLessons[idx-1].id);
+  else if(dir === 'prev' && idx === 0) goHome();
+}
+function goHome(){
+  state.current = null;
+  saveState();
+  document.querySelectorAll('.lesson-view').forEach(v => v.style.display='none');
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('breadcrumb').innerHTML = 'Dashboard';
+  document.getElementById('btn-prev').style.display='none';
+  document.getElementById('btn-next').style.display='none';
+  document.getElementById('content').scrollTop=0;
+  buildSidebar();
+}
+document.querySelector('.sb-logo').addEventListener('click', goHome);
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('shown');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('shown');
+}
+
+// INIT
+buildSidebar();
+buildDashboard();
+if(state.current){ openLesson(state.current); }
+</script>
+</body>
+</html>
