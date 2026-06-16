@@ -1,7 +1,7 @@
 # 📚 AI Trainer & Annotator Course
 
 A self-directed course built to develop foundational knowledge in AI annotation and AI trainer workflows. Created as part of a personal learning journey to transition into the AI data annotation field.
-[https://freyton7.github.io/AI-Annotation-Practice-Task/](https://freyton7.github.io/AI-Trainer-and-Annotator-Course/)
+(https://freyton7.github.io/AI-Trainer-and-Annotator-Course/)
 ---
 
 ## 📌 About This Project
