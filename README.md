@@ -41,7 +41,6 @@ This course was created to:
 **Frelynel Banay**
 Career shifter transitioning from Team Lead & Technical Support into AI Annotation
 📧 frel.banay@gmail.com
-🔗 [LinkedIn](#)
 
 ---
 
